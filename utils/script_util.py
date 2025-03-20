@@ -11,6 +11,12 @@ NUM_CLASSES = 1000
 def model_and_diffusion_defaults():
     """
     Defaults for image training.
+
+    获取图像训练的默认参数。
+
+    返回:
+        dict: 包含图像训练默认参数的字典
+
     """
     return dict(
         image_size=64,
@@ -56,6 +62,33 @@ def create_model_and_diffusion(
     use_checkpoint,
     use_scale_shift_norm,
 ):
+    """
+    根据给定参数创建模型和高斯扩散对象。
+
+    参数:
+        image_size (int): 图像的大小。
+        class_cond (bool): 是否使用类别条件。
+        learn_sigma (bool): 是否学习标准差。
+        sigma_small (bool): 是否使用小的标准差。
+        num_channels (int): 模型的通道数。
+        num_res_blocks (int): 残差块的数量。
+        num_heads (int): 注意力头的数量。
+        num_heads_upsample (int): 上采样时注意力头的数量。
+        attention_resolutions (str): 注意力分辨率。
+        dropout (float): 丢弃率。
+        diffusion_steps (int): 扩散步数。
+        noise_schedule (str): 噪声调度方式。
+        timestep_respacing (str): 时间步重新间隔。
+        use_kl (bool): 是否使用 KL 散度损失。
+        predict_xstart (bool): 是否预测起始图像。
+        rescale_timesteps (bool): 是否重新缩放时间步。
+        rescale_learned_sigmas (bool): 是否重新缩放学习到的标准差。
+        use_checkpoint (bool): 是否使用梯度检查点。
+        use_scale_shift_norm (bool): 是否使用缩放平移归一化。
+
+    返回:
+        tuple: 包含模型和高斯扩散对象的元组。
+    """
     model = create_model(
         image_size,
         num_channels,
@@ -96,6 +129,25 @@ def create_model(
     use_scale_shift_norm,
     dropout,
 ):
+    """
+    根据给定参数创建 UNet 模型。
+
+    参数:
+        image_size (int): 图像的大小。
+        num_channels (int): 模型的通道数。
+        num_res_blocks (int): 残差块的数量。
+        learn_sigma (bool): 是否学习标准差。
+        class_cond (bool): 是否使用类别条件。
+        use_checkpoint (bool): 是否使用梯度检查点。
+        attention_resolutions (str): 注意力分辨率。
+        num_heads (int): 注意力头的数量。
+        num_heads_upsample (int): 上采样时注意力头的数量。
+        use_scale_shift_norm (bool): 是否使用缩放平移归一化。
+        dropout (float): 丢弃率。
+
+    返回:
+        UNetModel: 创建好的 UNet 模型。
+    """
     if image_size == 256:
         channel_mult = (1, 1, 2, 2, 4, 4)
     elif image_size == 64:
@@ -126,6 +178,12 @@ def create_model(
 
 
 def sr_model_and_diffusion_defaults():
+    """
+    获取超分辨率模型和扩散的默认参数。
+
+    返回:
+        dict: 包含超分辨率模型和扩散默认参数的字典。
+    """
     res = model_and_diffusion_defaults()
     res["large_size"] = 256
     res["small_size"] = 64
@@ -157,6 +215,33 @@ def sr_create_model_and_diffusion(
     use_checkpoint,
     use_scale_shift_norm,
 ):
+    """
+    根据给定参数创建超分辨率模型和高斯扩散对象。
+
+    参数:
+        large_size (int): 高分辨率图像的大小。
+        small_size (int): 低分辨率图像的大小。
+        class_cond (bool): 是否使用类别条件。
+        learn_sigma (bool): 是否学习标准差。
+        num_channels (int): 模型的通道数。
+        num_res_blocks (int): 残差块的数量。
+        num_heads (int): 注意力头的数量。
+        num_heads_upsample (int): 上采样时注意力头的数量。
+        attention_resolutions (str): 注意力分辨率。
+        dropout (float): 丢弃率。
+        diffusion_steps (int): 扩散步数。
+        noise_schedule (str): 噪声调度方式。
+        timestep_respacing (str): 时间步重新间隔。
+        use_kl (bool): 是否使用 KL 散度损失。
+        predict_xstart (bool): 是否预测起始图像。
+        rescale_timesteps (bool): 是否重新缩放时间步。
+        rescale_learned_sigmas (bool): 是否重新缩放学习到的标准差。
+        use_checkpoint (bool): 是否使用梯度检查点。
+        use_scale_shift_norm (bool): 是否使用缩放平移归一化。
+
+    返回:
+        tuple: 包含超分辨率模型和高斯扩散对象的元组。
+    """
     model = sr_create_model(
         large_size,
         small_size,
@@ -198,6 +283,26 @@ def sr_create_model(
     use_scale_shift_norm,
     dropout,
 ):
+    """
+    根据给定参数创建超分辨率模型。
+
+    参数:
+        large_size (int): 高分辨率图像的大小。
+        small_size (int): 低分辨率图像的大小。
+        num_channels (int): 模型的通道数。
+        num_res_blocks (int): 残差块的数量。
+        learn_sigma (bool): 是否学习标准差。
+        class_cond (bool): 是否使用类别条件。
+        use_checkpoint (bool): 是否使用梯度检查点。
+        attention_resolutions (str): 注意力分辨率。
+        num_heads (int): 注意力头的数量。
+        num_heads_upsample (int): 上采样时注意力头的数量。
+        use_scale_shift_norm (bool): 是否使用缩放平移归一化。
+        dropout (float): 丢弃率。
+
+    返回:
+        SuperResModel: 创建好的超分辨率模型。
+    """
     _ = small_size  # hack to prevent unused variable
 
     if large_size == 256:
@@ -239,6 +344,23 @@ def create_gaussian_diffusion(
     rescale_learned_sigmas=False,
     timestep_respacing="",
 ):
+    """
+    根据给定参数创建高斯扩散对象。
+
+    参数:
+        steps (int, optional): 扩散步数，默认为 1000。
+        learn_sigma (bool, optional): 是否学习标准差，默认为 False。
+        sigma_small (bool, optional): 是否使用小的标准差，默认为 False。
+        noise_schedule (str, optional): 噪声调度方式，默认为 "linear"。
+        use_kl (bool, optional): 是否使用 KL 散度损失，默认为 False。
+        predict_xstart (bool, optional): 是否预测起始图像，默认为 False。
+        rescale_timesteps (bool, optional): 是否重新缩放时间步，默认为 False。
+        rescale_learned_sigmas (bool, optional): 是否重新缩放学习到的标准差，默认为 False。
+        timestep_respacing (str, optional): 时间步重新间隔，默认为 ""。
+
+    返回:
+        SpacedDiffusion: 创建好的高斯扩散对象。
+    """
     betas = gd.get_named_beta_schedule(noise_schedule, steps)
     if use_kl:
         loss_type = gd.LossType.RESCALED_KL
@@ -269,6 +391,16 @@ def create_gaussian_diffusion(
 
 
 def add_dict_to_argparser(parser, default_dict):
+    """
+    将字典中的键值对添加到命令行参数解析器中。
+
+    参数:
+        parser (argparse.ArgumentParser): 命令行参数解析器。
+        default_dict (dict): 包含默认参数的字典。
+
+    返回:
+        None
+    """
     for k, v in default_dict.items():
         v_type = type(v)
         if v is None:
@@ -279,12 +411,34 @@ def add_dict_to_argparser(parser, default_dict):
 
 
 def args_to_dict(args, keys):
+    """
+    从命令行参数对象中提取指定键的值，组成字典。
+
+    参数:
+        args (argparse.Namespace): 命令行参数对象。
+        keys (list): 要提取的键的列表。
+
+    返回:
+        dict: 包含指定键值对的字典。
+    """
     return {k: getattr(args, k) for k in keys}
 
 
 def str2bool(v):
     """
     https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+    """
+    """
+    将字符串转换为布尔值。
+
+    参数:
+        v (str or bool): 要转换的字符串或布尔值。
+
+    返回:
+        bool: 转换后的布尔值。
+
+    异常:
+        argparse.ArgumentTypeError: 如果输入的字符串不是有效的布尔值表示。
     """
     if isinstance(v, bool):
         return v

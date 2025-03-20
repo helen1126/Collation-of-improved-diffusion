@@ -54,6 +54,12 @@ def load_data(
 
 
 def _list_image_files_recursively(data_dir):
+    """
+    递归地列出指定目录下的所有图像文件。
+
+    :param data_dir: 要搜索的目录。
+    :return: 包含所有图像文件完整路径的列表。
+    """
     results = []
     for entry in sorted(bf.listdir(data_dir)):
         full_path = bf.join(data_dir, entry)
@@ -67,15 +73,35 @@ def _list_image_files_recursively(data_dir):
 
 class ImageDataset(Dataset):
     def __init__(self, resolution, image_paths, classes=None, shard=0, num_shards=1):
+        """
+        初始化 ImageDataset 类。
+
+        :param resolution: 图像的目标分辨率。
+        :param image_paths: 图像文件的路径列表。
+        :param classes: 图像对应的类别标签列表，如果没有则为 None。
+        :param shard: 当前进程的分片编号。
+        :param num_shards: 总的分片数量。
+        """
         super().__init__()
         self.resolution = resolution
         self.local_images = image_paths[shard:][::num_shards]
         self.local_classes = None if classes is None else classes[shard:][::num_shards]
 
     def __len__(self):
+        """
+        返回数据集的长度，即本地图像的数量。
+
+        :return: 本地图像的数量。
+        """
         return len(self.local_images)
 
     def __getitem__(self, idx):
+        """
+        根据索引获取数据集中的一个样本。
+
+        :param idx: 样本的索引。
+        :return: 一个元组，包含处理后的图像数组和一个字典，字典中可能包含类别标签。
+        """
         path = self.local_images[idx]
         with bf.BlobFile(path, "rb") as f:
             pil_image = Image.open(f)

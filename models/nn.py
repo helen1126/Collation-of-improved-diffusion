@@ -140,8 +140,26 @@ def checkpoint(func, inputs, params, flag):
 
 
 class CheckpointFunction(th.autograd.Function):
+    """
+    A custom autograd function for gradient checkpointing.
+    This class overrides the forward and backward methods to implement
+    gradient checkpointing, which reduces memory usage during the forward pass
+    by recomputing intermediate activations in the backward pass.
+    """
     @staticmethod
     def forward(ctx, run_function, length, *args):
+        """
+        Forward pass of the CheckpointFunction.
+
+        Args:
+            ctx (object): Context object to save information for the backward pass.
+            run_function (callable): The function to run.
+            length (int): The number of input tensors.
+            *args: Input tensors and parameters.
+
+        Returns:
+            torch.Tensor: Output tensors of the run_function.
+        """
         ctx.run_function = run_function
         ctx.input_tensors = list(args[:length])
         ctx.input_params = list(args[length:])
@@ -151,6 +169,16 @@ class CheckpointFunction(th.autograd.Function):
 
     @staticmethod
     def backward(ctx, *output_grads):
+        """
+        Backward pass of the CheckpointFunction.
+
+        Args:
+            ctx (object): Context object with saved information from the forward pass.
+            *output_grads: Gradients of the output tensors.
+
+        Returns:
+            tuple: Gradients of the input tensors and parameters.
+        """
         ctx.input_tensors = [x.detach().requires_grad_(True) for x in ctx.input_tensors]
         with th.enable_grad():
             # Fixes a bug where the first op in run_function modifies the

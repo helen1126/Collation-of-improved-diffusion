@@ -59,11 +59,21 @@ class ScheduleSampler(ABC):
 
 
 class UniformSampler(ScheduleSampler):
+    """
+        初始化 UniformSampler 类。
+
+        :param diffusion: 用于采样的扩散对象。
+        """
     def __init__(self, diffusion):
         self.diffusion = diffusion
         self._weights = np.ones([diffusion.num_timesteps])
 
     def weights(self):
+        """
+        获取均匀采样的权重数组，所有时间步的权重都为 1。
+
+        :return: 一个 numpy 数组，所有元素都为 1。
+        """
         return self._weights
 
 
@@ -123,6 +133,13 @@ class LossAwareSampler(ScheduleSampler):
 
 class LossSecondMomentResampler(LossAwareSampler):
     def __init__(self, diffusion, history_per_term=10, uniform_prob=0.001):
+        """
+        初始化 LossSecondMomentResampler 类。
+
+        :param diffusion: 用于采样的扩散对象。
+        :param history_per_term: 每个时间步保存的历史损失数量。
+        :param uniform_prob: 均匀采样的概率。
+        """
         self.diffusion = diffusion
         self.history_per_term = history_per_term
         self.uniform_prob = uniform_prob
@@ -132,6 +149,14 @@ class LossSecondMomentResampler(LossAwareSampler):
         self._loss_counts = np.zeros([diffusion.num_timesteps], dtype=np.int)
 
     def weights(self):
+        """
+        获取重采样的权重数组。
+
+        如果历史损失尚未填满，则返回均匀权重。
+        否则，根据损失的二阶矩计算权重，并结合均匀采样的概率。
+
+        :return: 一个 numpy 数组，包含每个时间步的权重。
+        """
         if not self._warmed_up():
             return np.ones([self.diffusion.num_timesteps], dtype=np.float64)
         weights = np.sqrt(np.mean(self._loss_history ** 2, axis=-1))
@@ -141,6 +166,14 @@ class LossSecondMomentResampler(LossAwareSampler):
         return weights
 
     def update_with_all_losses(self, ts, losses):
+        """
+        使用所有进程的损失更新损失历史记录。
+
+        如果某个时间步的历史损失已满，则移除最旧的损失记录。
+
+        :param ts: 一个整数列表，表示时间步。
+        :param losses: 一个浮点数列表，表示每个时间步的损失。
+        """
         for t, loss in zip(ts, losses):
             if self._loss_counts[t] == self.history_per_term:
                 # Shift out the oldest loss term.
@@ -151,4 +184,9 @@ class LossSecondMomentResampler(LossAwareSampler):
                 self._loss_counts[t] += 1
 
     def _warmed_up(self):
+        """
+        检查所有时间步的历史损失是否都已填满。
+
+        :return: 如果所有时间步的历史损失都已填满，则返回 True；否则返回 False。
+        """
         return (self._loss_counts == self.history_per_term).all()

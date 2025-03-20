@@ -1,6 +1,14 @@
-# improved-diffusion
+# Collation of improved diffusion
+This is the history code collation for the artical Improved Denoising Diffusion Probabilistic Models(https://arxiv.org/abs/2102.09672)
 
-This is the codebase for [Improved Denoising Diffusion Probabilistic Models](https://arxiv.org/abs/2102.09672).
+# requirments
+python == 3.9
+torch
+pillow
+blobfile>=1.0.5
+mpi4py
+numpy
+tqdm
 
 # Usage
 
@@ -143,36 +151,4 @@ Unconditional CIFAR-10 with the `L_vlb` objective and cosine noise schedule [[ch
 MODEL_FLAGS="--image_size 32 --num_channels 128 --num_res_blocks 3 --learn_sigma True --dropout 0.3"
 DIFFUSION_FLAGS="--diffusion_steps 4000 --noise_schedule cosine --use_kl True"
 TRAIN_FLAGS="--lr 1e-4 --batch_size 128 --schedule_sampler loss-second-moment"
-```
-
-```
-improved-diffusion
-├─ 📁datasets
-│  ├─ 📄cifar10.py
-│  ├─ 📄lsun_bedroom.py
-│  └─ 📄README.md
-├─ 📁improved_diffusion
-│  ├─ 📄dist_util.py
-│  ├─ 📄fp16_util.py
-│  ├─ 📄gaussian_diffusion.py
-│  ├─ 📄image_datasets.py
-│  ├─ 📄logger.py
-│  ├─ 📄losses.py
-│  ├─ 📄nn.py
-│  ├─ 📄resample.py
-│  ├─ 📄respace.py
-│  ├─ 📄script_util.py
-│  ├─ 📄train_util.py
-│  ├─ 📄unet.py
-│  └─ 📄__init__.py
-├─ 📁scripts
-│  ├─ 📄image_nll.py
-│  ├─ 📄image_sample.py
-│  ├─ 📄image_train.py
-│  ├─ 📄super_res_sample.py
-│  └─ 📄super_res_train.py
-├─ 📄.gitignore
-├─ 📄LICENSE
-├─ 📄README.md
-└─ 📄setup.py
 ```

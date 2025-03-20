@@ -29,6 +29,13 @@ class TimestepBlock(nn.Module):
     def forward(self, x, emb):
         """
         Apply the module to `x` given `emb` timestep embeddings.
+
+        Args:
+            x (torch.Tensor): The input tensor.
+            emb (torch.Tensor): The timestep embeddings.
+
+        Returns:
+            torch.Tensor: The output tensor after applying the module.
         """
 
 
@@ -58,6 +65,14 @@ class Upsample(nn.Module):
     """
 
     def __init__(self, channels, use_conv, dims=2):
+        """
+        Initialize the Upsample layer.
+
+        Args:
+            channels (int): Channels in the inputs and outputs.
+            use_conv (bool): A bool determining if a convolution is applied.
+            dims (int): Determines if the signal is 1D, 2D, or 3D.
+        """
         super().__init__()
         self.channels = channels
         self.use_conv = use_conv
@@ -66,6 +81,15 @@ class Upsample(nn.Module):
             self.conv = conv_nd(dims, channels, channels, 3, padding=1)
 
     def forward(self, x):
+        """
+        Perform upsampling on the input tensor `x`.
+
+        Args:
+            x (torch.Tensor): The input tensor.
+
+        Returns:
+            torch.Tensor: The upsampled tensor.
+        """
         assert x.shape[1] == self.channels
         if self.dims == 3:
             x = F.interpolate(
@@ -89,6 +113,14 @@ class Downsample(nn.Module):
     """
 
     def __init__(self, channels, use_conv, dims=2):
+        """
+        Initialize the Downsample layer.
+
+        Args:
+            channels (int): Channels in the inputs and outputs.
+            use_conv (bool): A bool determining if a convolution is applied.
+            dims (int): Determines if the signal is 1D, 2D, or 3D.
+        """
         super().__init__()
         self.channels = channels
         self.use_conv = use_conv
@@ -100,6 +132,15 @@ class Downsample(nn.Module):
             self.op = avg_pool_nd(stride)
 
     def forward(self, x):
+        """
+        Perform downsampling on the input tensor `x`.
+
+        Args:
+            x (torch.Tensor): The input tensor.
+
+        Returns:
+            torch.Tensor: The downsampled tensor.
+        """
         assert x.shape[1] == self.channels
         return self.op(x)
 
@@ -130,6 +171,19 @@ class ResBlock(TimestepBlock):
         dims=2,
         use_checkpoint=False,
     ):
+        """
+        Initialize the ResBlock.
+
+        Args:
+            channels (int): The number of input channels.
+            emb_channels (int): The number of timestep embedding channels.
+            dropout (float): The rate of dropout.
+            out_channels (int, optional): If specified, the number of out channels.
+            use_conv (bool): If True and out_channels is specified, use a spatial convolution.
+            use_scale_shift_norm (bool): Whether to use scale-shift normalization.
+            dims (int): Determines if the signal is 1D, 2D, or 3D.
+            use_checkpoint (bool): If True, use gradient checkpointing on this module.
+        """
         super().__init__()
         self.channels = channels
         self.emb_channels = emb_channels
@@ -182,6 +236,16 @@ class ResBlock(TimestepBlock):
         )
 
     def _forward(self, x, emb):
+        """
+        The actual forward pass of the ResBlock.
+
+        Args:
+            x (torch.Tensor): An [N x C x ...] Tensor of features.
+            emb (torch.Tensor): An [N x emb_channels] Tensor of timestep embeddings.
+
+        Returns:
+            torch.Tensor: An [N x C x ...] Tensor of outputs.
+        """
         h = self.in_layers(x)
         emb_out = self.emb_layers(emb).type(h.dtype)
         while len(emb_out.shape) < len(h.shape):
@@ -206,6 +270,14 @@ class AttentionBlock(nn.Module):
     """
 
     def __init__(self, channels, num_heads=1, use_checkpoint=False):
+        """
+        Initialize the AttentionBlock.
+
+        Args:
+            channels (int): The number of input channels.
+            num_heads (int): The number of attention heads.
+            use_checkpoint (bool): If True, use gradient checkpointing on this module.
+        """
         super().__init__()
         self.channels = channels
         self.num_heads = num_heads
@@ -217,9 +289,27 @@ class AttentionBlock(nn.Module):
         self.proj_out = zero_module(conv_nd(1, channels, channels, 1))
 
     def forward(self, x):
+        """
+        Apply the attention block to the input tensor `x`.
+
+        Args:
+            x (torch.Tensor): The input tensor.
+
+        Returns:
+            torch.Tensor: The output tensor after applying the attention block.
+        """
         return checkpoint(self._forward, (x,), self.parameters(), self.use_checkpoint)
 
     def _forward(self, x):
+        """
+        The actual forward pass of the AttentionBlock.
+
+        Args:
+            x (torch.Tensor): The input tensor.
+
+        Returns:
+            torch.Tensor: The output tensor.
+        """
         b, c, *spatial = x.shape
         x = x.reshape(b, c, -1)
         qkv = self.qkv(self.norm(x))
@@ -315,6 +405,25 @@ class UNetModel(nn.Module):
         num_heads_upsample=-1,
         use_scale_shift_norm=False,
     ):
+        """
+        Initialize the UNetModel.
+
+        Args:
+            in_channels (int): Channels in the input Tensor.
+            model_channels (int): Base channel count for the model.
+            out_channels (int): Channels in the output Tensor.
+            num_res_blocks (int): Number of residual blocks per downsample.
+            attention_resolutions (collection): A collection of downsample rates at which attention will take place.
+            dropout (float): The dropout probability.
+            channel_mult (tuple): Channel multiplier for each level of the UNet.
+            conv_resample (bool): If True, use learned convolutions for upsampling and downsampling.
+            dims (int): Determines if the signal is 1D, 2D, or 3D.
+            num_classes (int, optional): If specified, the model will be class-conditional with `num_classes` classes.
+            use_checkpoint (bool): Use gradient checkpointing to reduce memory usage.
+            num_heads (int): The number of attention heads in each attention layer.
+            num_heads_upsample (int): The number of attention heads in each attention layer during upsampling.
+            use_scale_shift_norm (bool): Whether to use scale-shift normalization.
+        """
         super().__init__()
 
         if num_heads_upsample == -1:

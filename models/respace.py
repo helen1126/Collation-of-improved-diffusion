@@ -70,6 +70,12 @@ class SpacedDiffusion(GaussianDiffusion):
     """
 
     def __init__(self, use_timesteps, **kwargs):
+        """
+        Initialize the SpacedDiffusion class.
+
+        :param use_timesteps: A collection of timesteps from the original diffusion process to retain.
+        :param kwargs: Keyword arguments to create the base diffusion process.
+        """
         self.use_timesteps = set(use_timesteps)
         self.timestep_map = []
         self.original_num_steps = len(kwargs["betas"])
@@ -88,14 +94,36 @@ class SpacedDiffusion(GaussianDiffusion):
     def p_mean_variance(
         self, model, *args, **kwargs
     ):  # pylint: disable=signature-differs
+        """
+        Calculate the mean and variance of the posterior distribution.
+
+        :param model: The model to use for the calculation.
+        :param args: Positional arguments.
+        :param kwargs: Keyword arguments.
+        :return: The mean and variance of the posterior distribution.
+        """
         return super().p_mean_variance(self._wrap_model(model), *args, **kwargs)
 
     def training_losses(
         self, model, *args, **kwargs
     ):  # pylint: disable=signature-differs
+        """
+        Calculate the training losses.
+
+        :param model: The model to use for the calculation.
+        :param args: Positional arguments.
+        :param kwargs: Keyword arguments.
+        :return: The training losses.
+        """
         return super().training_losses(self._wrap_model(model), *args, **kwargs)
 
     def _wrap_model(self, model):
+        """
+        Wrap the model to handle the timestep mapping.
+
+        :param model: The model to wrap.
+        :return: The wrapped model.
+        """
         if isinstance(model, _WrappedModel):
             return model
         return _WrappedModel(
@@ -103,18 +131,40 @@ class SpacedDiffusion(GaussianDiffusion):
         )
 
     def _scale_timesteps(self, t):
+        """
+        Scale the timesteps. Scaling is done by the wrapped model.
+
+        :param t: The timesteps to scale.
+        :return: The scaled timesteps.
+        """
         # Scaling is done by the wrapped model.
         return t
 
 
 class _WrappedModel:
     def __init__(self, model, timestep_map, rescale_timesteps, original_num_steps):
+        """
+        Initialize the _WrappedModel class.
+
+        :param model: The original model.
+        :param timestep_map: The mapping of timesteps.
+        :param rescale_timesteps: Whether to rescale the timesteps.
+        :param original_num_steps: The original number of steps in the diffusion process.
+        """
         self.model = model
         self.timestep_map = timestep_map
         self.rescale_timesteps = rescale_timesteps
         self.original_num_steps = original_num_steps
 
     def __call__(self, x, ts, **kwargs):
+        """
+        Call the wrapped model.
+
+        :param x: The input tensor.
+        :param ts: The timesteps.
+        :param kwargs: Keyword arguments.
+        :return: The output of the model.
+        """
         map_tensor = th.tensor(self.timestep_map, device=ts.device, dtype=ts.dtype)
         new_ts = map_tensor[ts]
         if self.rescale_timesteps:
